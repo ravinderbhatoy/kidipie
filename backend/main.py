@@ -6,7 +6,6 @@ from routers import (
     chatbot,
     communities,
     engagement,
-    moderation,
     parent,
     posts,
     streaks_rewards,
@@ -38,7 +37,6 @@ for router_module in [
     streaks_rewards,
     communities,
     chatbot,
-    moderation,
     parent,
 ]:
     app.include_router(router_module.router, prefix="/api/v1")

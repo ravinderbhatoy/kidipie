@@ -25,3 +25,9 @@ class DeletePostResponse (BaseModel):
 class PostStatusResponse (BaseModel):
     post_id: int
     status: str
+
+
+class CommentRequest(BaseModel):
+    post_id: int
+    user_id: UUID
+    comment_text: str
