@@ -1,24 +1,25 @@
-import React, { useState, useRef, type ChangeEvent } from 'react';
-import { Image as ImageIcon, X, Loader2, Send } from 'lucide-react';
-import type { PostBoxProps } from '../types';
+import React, { useState, useRef, type ChangeEvent } from "react";
+import { Image as ImageIcon, X, Loader2, Send } from "lucide-react";
+import type { PostBoxProps } from "../types";
+import { createPost } from "../api/axios";
 
-const TAG_OPTIONS = ['Project', 'Drawing', 'Craft', 'Science'];
+const TAG_OPTIONS = ["Project", "Drawing", "Craft", "Science"];
 
 export const PostBox: React.FC<PostBoxProps> = ({
   currentUser,
   onPost,
-  placeholder = 'Share what you made today...',
-  className = '',
+  placeholder = "Share what you made today...",
+  className = "",
 }) => {
-  const [content, setContent] = useState('');
+  const [content, setContent] = useState("");
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [selectedTag, setSelectedTag] = useState<string>('Project');
+  const [selectedTag, setSelectedTag] = useState<string>("Project");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleImageFile = (file: File) => {
-    if (!file.type.startsWith('image/')) return;
+    if (!file.type.startsWith("image/")) return;
     const reader = new FileReader();
     reader.onload = (e) => {
       if (e.target?.result) {
@@ -37,11 +38,11 @@ export const PostBox: React.FC<PostBoxProps> = ({
   const removeImage = () => {
     setSelectedImage(null);
     if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      fileInputRef.current.value = "";
     }
   };
 
-  const handleSubmit = async (e?: React.FormEvent) => {
+  const handleSubmit = async (e?: React.SubmitEvent) => {
     if (e) e.preventDefault();
     const trimmedContent = content.trim();
     if (!trimmedContent && !selectedImage) return;
@@ -51,14 +52,18 @@ export const PostBox: React.FC<PostBoxProps> = ({
       if (onPost) {
         await onPost({
           content: trimmedContent,
-          imageUrl: selectedImage || undefined,
-          tag: selectedTag,
+          image_url: selectedImage || undefined,
         });
       }
-      setContent('');
+      const res = await createPost({
+        content: trimmedContent,
+        image_url: selectedImage || undefined,
+      })
+      console.log('posted: ', res)
+      setContent("");
       setSelectedImage(null);
     } catch (err) {
-      console.error('Failed to publish post:', err);
+      console.error("Failed to publish post:", err);
     } finally {
       setIsSubmitting(false);
     }
@@ -68,7 +73,9 @@ export const PostBox: React.FC<PostBoxProps> = ({
   const avatarUrl = currentUser?.avatar;
 
   return (
-    <div className={`bg-[var(--bg-card)] rounded-2xl p-4 sm:p-5 border-2 border-[var(--border-subtle)] shadow-sm ${className}`}>
+    <div
+      className={`bg-[var(--bg-card)] rounded-2xl p-4 sm:p-5 border-2 border-[var(--border-subtle)] shadow-sm ${className}`}
+    >
       <input
         type="file"
         ref={fileInputRef}
@@ -83,7 +90,7 @@ export const PostBox: React.FC<PostBoxProps> = ({
           <div className="w-10 h-10 rounded-full border-2 border-[var(--primary)] overflow-hidden bg-[var(--bg-input)] shrink-0">
             <img
               src={avatarUrl}
-              alt={currentUser?.name || 'User'}
+              alt={currentUser?.name || "User"}
               className="w-full h-full object-cover"
             />
           </div>
@@ -136,11 +143,10 @@ export const PostBox: React.FC<PostBoxProps> = ({
                     key={tag}
                     type="button"
                     onClick={() => setSelectedTag(tag)}
-                    className={`text-xs px-2.5 py-1 rounded-full font-bold transition-colors cursor-pointer ${
-                      selectedTag === tag
-                        ? 'bg-[var(--primary)] text-white'
-                        : 'bg-[var(--bg-input)] text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)]'
-                    }`}
+                    className={`text-xs px-2.5 py-1 rounded-full font-bold transition-colors cursor-pointer ${selectedTag === tag
+                      ? "bg-[var(--primary)] text-white"
+                      : "bg-[var(--bg-input)] text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)]"
+                      }`}
                   >
                     {tag}
                   </button>
@@ -152,11 +158,10 @@ export const PostBox: React.FC<PostBoxProps> = ({
               type="button"
               onClick={() => handleSubmit()}
               disabled={!isFormValid || isSubmitting}
-              className={`bg-[var(--primary)] text-white font-bold text-sm px-5 py-2 rounded-xl flex items-center gap-2 transition-all ${
-                isFormValid && !isSubmitting
-                  ? 'hover:bg-[var(--primary-hover)] cursor-pointer shadow-sm'
-                  : 'opacity-50 cursor-not-allowed'
-              }`}
+              className={`bg-[var(--primary)] text-white font-bold text-sm px-5 py-2 rounded-xl flex items-center gap-2 transition-all ${isFormValid && !isSubmitting
+                ? "hover:bg-[var(--primary-hover)] cursor-pointer shadow-sm"
+                : "opacity-50 cursor-not-allowed"
+                }`}
             >
               {isSubmitting ? (
                 <Loader2 className="w-4 h-4 animate-spin" />

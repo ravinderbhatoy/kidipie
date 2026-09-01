@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { Heart, MessageCircle, Sparkles, Smile, Send } from 'lucide-react';
-import type { PostItem } from '../types';
-import { usePosts } from '../hooks/usePosts';
+import React, { useState } from "react";
+import { Heart, MessageCircle, Sparkles, Smile, Send } from "lucide-react";
+import type { PostItem } from "../types";
+import { usePosts } from "../hooks/usePosts";
 
 interface PostCardProps {
   post: PostItem;
@@ -10,13 +10,13 @@ interface PostCardProps {
 export const PostCard: React.FC<PostCardProps> = ({ post }) => {
   const { toggleLikePost, addReaction, addComment } = usePosts();
   const [showComments, setShowComments] = useState(false);
-  const [commentText, setCommentText] = useState('');
+  const [commentText, setCommentText] = useState("");
 
-  const handleCommentSubmit = (e: React.FormEvent) => {
+  const handleCommentSubmit = (e: React.SubmitEvent) => {
     e.preventDefault();
     if (commentText.trim()) {
       addComment(post.id, commentText);
-      setCommentText('');
+      setCommentText("");
     }
   };
 
@@ -30,12 +30,16 @@ export const PostCard: React.FC<PostCardProps> = ({ post }) => {
           className="w-10 h-10 rounded-full border-2 border-[var(--primary)] object-cover shrink-0"
           onError={(e) => {
             (e.currentTarget as HTMLImageElement).src =
-              'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80';
+              "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80";
           }}
         />
         <div>
-          <h3 className="font-bold text-[var(--text-main)] text-sm">{post.author.name}</h3>
-          <span className="text-xs text-[var(--text-muted)] font-medium">{post.timestamp}</span>
+          <h3 className="font-bold text-[var(--text-main)] text-sm">
+            {post.author.name}
+          </h3>
+          <span className="text-xs text-[var(--text-muted)] font-medium">
+            {post.timestamp}
+          </span>
         </div>
         {post.tag && (
           <span className="ml-auto bg-[var(--primary)] text-white text-xs px-3 py-1 rounded-full font-bold shadow-sm">
@@ -46,14 +50,16 @@ export const PostCard: React.FC<PostCardProps> = ({ post }) => {
 
       {/* Post Text */}
       {post.content && (
-        <p className="text-[var(--text-main)] font-medium text-base leading-relaxed">{post.content}</p>
+        <p className="text-[var(--text-main)] font-medium text-base leading-relaxed">
+          {post.content}
+        </p>
       )}
 
       {/* Post Attachment Image */}
-      {post.imageUrl && (
+      {post.image_url && (
         <div className="rounded-xl overflow-hidden border border-[var(--border-subtle)] bg-[var(--bg-input)]">
           <img
-            src={post.imageUrl}
+            src={post.image_url}
             alt="Post attachment"
             className="w-full max-h-96 object-cover hover:scale-[1.01] transition-transform duration-200"
           />
@@ -66,19 +72,20 @@ export const PostCard: React.FC<PostCardProps> = ({ post }) => {
           {/* Like Button */}
           <button
             onClick={() => toggleLikePost(post.id)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold text-xs transition-all cursor-pointer ${
-              post.userLiked
-                ? 'bg-red-50 text-[var(--danger)] border border-red-200 scale-105'
-                : 'bg-[var(--bg-input)] text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)]'
-            }`}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold text-xs transition-all cursor-pointer ${post.userLiked
+              ? "bg-red-50 text-[var(--danger)] border border-red-200 scale-105"
+              : "bg-[var(--bg-input)] text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)]"
+              }`}
           >
-            <Heart className={`w-4 h-4 ${post.userLiked ? 'fill-[var(--danger)] text-[var(--danger)]' : ''}`} />
+            <Heart
+              className={`w-4 h-4 ${post.userLiked ? "fill-[var(--danger)] text-[var(--danger)]" : ""}`}
+            />
             <span>{post.likesCount}</span>
           </button>
 
           {/* Sparkles Reaction */}
           <button
-            onClick={() => addReaction(post.id, 'sparkles')}
+            onClick={() => addReaction(post.id, "sparkles")}
             className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-[var(--bg-input)] hover:bg-amber-50 text-[var(--accent-yellow-text)] font-bold text-xs transition-all cursor-pointer"
             title="Awesome!"
           >
@@ -88,7 +95,7 @@ export const PostCard: React.FC<PostCardProps> = ({ post }) => {
 
           {/* Surprised Reaction */}
           <button
-            onClick={() => addReaction(post.id, 'surprised')}
+            onClick={() => addReaction(post.id, "surprised")}
             className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-[var(--bg-input)] hover:bg-purple-50 text-[var(--primary)] font-bold text-xs transition-all cursor-pointer"
             title="Wow!"
           >
@@ -113,20 +120,27 @@ export const PostCard: React.FC<PostCardProps> = ({ post }) => {
           <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
             {post.comments.length > 0 ? (
               post.comments.map((c) => (
-                <div key={c.id} className="flex items-start gap-2.5 bg-[var(--bg-input)] p-2.5 rounded-xl">
+                <div
+                  key={c.id}
+                  className="flex items-start gap-2.5 bg-[var(--bg-input)] p-2.5 rounded-xl"
+                >
                   <img
                     src={c.authorAvatar}
                     alt={c.authorName}
                     className="w-7 h-7 rounded-full object-cover border border-[var(--primary)] shrink-0"
                     onError={(e) => {
                       (e.currentTarget as HTMLImageElement).src =
-                        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80';
+                        "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80";
                     }}
                   />
                   <div className="flex-1 text-xs">
                     <div className="flex items-center justify-between">
-                      <span className="font-bold text-[var(--text-main)]">{c.authorName}</span>
-                      <span className="text-[10px] text-[var(--text-muted)]">{c.timeAgo}</span>
+                      <span className="font-bold text-[var(--text-main)]">
+                        {c.authorName}
+                      </span>
+                      <span className="text-[10px] text-[var(--text-muted)]">
+                        {c.timeAgo}
+                      </span>
                     </div>
                     <p className="text-[var(--text-main)] mt-0.5">{c.text}</p>
                   </div>

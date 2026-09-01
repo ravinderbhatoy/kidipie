@@ -1,11 +1,11 @@
-import React from 'react';
-import { usePosts } from '../hooks/usePosts';
-import PostBox from '../components/PostBox';
-import PostCard from '../components/PostCard';
+import React from "react";
+import { usePosts } from "../hooks/usePosts";
+import PostBox from "../components/PostBox";
+
+import PostCard from "../components/PostCard";
 
 export const HomePage: React.FC = () => {
   const { userProfile, posts, addPost } = usePosts();
-
   return (
     <div className="space-y-6">
       {/* Create Post Box */}

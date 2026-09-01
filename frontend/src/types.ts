@@ -1,4 +1,5 @@
-export type TabType = 'home' | 'explore' | 'communities' | 'streaks' | 'profile';
+export type TabType =
+  "home" | "explore" | "communities" | "streaks" | "profile";
 
 export interface GalleryItem {
   id: string;
@@ -36,7 +37,7 @@ export interface PostItem {
   author: UserProfile;
   content: string;
   title?: string;
-  imageUrl?: string;
+  image_url?: string;
   imageAlt?: string;
   tag?: string;
   timestamp: string;
@@ -54,9 +55,7 @@ export interface PostBoxProps {
   currentUser?: UserProfile;
   onPost?: (postData: {
     content: string;
-    title?: string;
-    imageUrl?: string;
-    tag?: string;
+    image_url?: string;
   }) => void | Promise<void>;
   placeholder?: string;
   className?: string;
