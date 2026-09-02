@@ -8,6 +8,7 @@ interface PostCardProps {
 }
 
 export const PostCard: React.FC<PostCardProps> = ({ post }) => {
+  console.log(post)
   const { toggleLikePost, addReaction, addComment } = usePosts();
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState("");
@@ -25,8 +26,8 @@ export const PostCard: React.FC<PostCardProps> = ({ post }) => {
       {/* Header Info */}
       <div className="flex items-center gap-3">
         <img
-          src={post.author.avatar}
-          alt={post.author.name}
+          src={post.author?.avatar}
+          alt={post.author?.name}
           className="w-10 h-10 rounded-full border-2 border-[var(--primary)] object-cover shrink-0"
           onError={(e) => {
             (e.currentTarget as HTMLImageElement).src =
@@ -35,10 +36,10 @@ export const PostCard: React.FC<PostCardProps> = ({ post }) => {
         />
         <div>
           <h3 className="font-bold text-[var(--text-main)] text-sm">
-            {post.author.name}
+            {post.author?.name}
           </h3>
           <span className="text-xs text-[var(--text-muted)] font-medium">
-            {post.timestamp}
+            {post.created_at}
           </span>
         </div>
         {post.tag && (
@@ -110,7 +111,7 @@ export const PostCard: React.FC<PostCardProps> = ({ post }) => {
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[var(--bg-input)] hover:bg-[var(--bg-subtle)] text-[var(--text-secondary)] font-bold text-xs transition-all cursor-pointer"
         >
           <MessageCircle className="w-4 h-4 text-[var(--primary)]" />
-          <span>{post.comments.length} Comments</span>
+          <span>{post.comments?.length} Comments</span>
         </button>
       </div>
 
@@ -118,7 +119,7 @@ export const PostCard: React.FC<PostCardProps> = ({ post }) => {
       {showComments && (
         <div className="pt-3 border-t border-[var(--border-subtle)] space-y-3">
           <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-            {post.comments.length > 0 ? (
+            {post.comments?.length > 0 ? (
               post.comments.map((c) => (
                 <div
                   key={c.id}

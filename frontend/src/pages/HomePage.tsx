@@ -1,11 +1,34 @@
-import React from "react";
-import { usePosts } from "../hooks/usePosts";
+import React, { useEffect, useState } from "react";
 import PostBox from "../components/PostBox";
-
 import PostCard from "../components/PostCard";
+import usePosts from "../hooks/usePosts";
+import { fetchPosts } from "../api/axios";
 
 export const HomePage: React.FC = () => {
-  const { userProfile, posts, addPost } = usePosts();
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const getPosts = async () => {
+      try {
+        const response = await fetchPosts();
+        console.log(response)
+        setPosts(response)
+      } catch (error) {
+        console.error("Failed to fetch posts", error);
+        throw error
+      } finally {
+        setLoading(false);
+      }
+    }
+    getPosts();
+  }, [])
+
+  if (loading) {
+    return <p>Loading...</p>;
+  }
+
+  const { userProfile, addPost } = usePosts();
   return (
     <div className="space-y-6">
       {/* Create Post Box */}
@@ -16,7 +39,7 @@ export const HomePage: React.FC = () => {
       />
 
       {/* Feed List */}
-      {posts.length > 0 ? (
+      {posts?.length > 0 ? (
         <div className="space-y-4">
           {posts.map((post) => (
             <PostCard key={post.id} post={post} />

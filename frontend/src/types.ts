@@ -40,7 +40,7 @@ export interface PostItem {
   image_url?: string;
   imageAlt?: string;
   tag?: string;
-  timestamp: string;
+  created_at: string;
   likesCount: number;
   reactions: {
     heart: number;

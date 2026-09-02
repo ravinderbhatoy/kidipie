@@ -11,6 +11,7 @@ export const PostBox: React.FC<PostBoxProps> = ({
   placeholder = "Share what you made today...",
   className = "",
 }) => {
+
   const [content, setContent] = useState("");
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [selectedTag, setSelectedTag] = useState<string>("Project");
