@@ -2,11 +2,9 @@ from typing import Annotated
 from fastapi import APIRouter, Path, Depends, HTTPException
 from database import supabase, SUPABASE_URL, SUPABASE_KEY
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from schemas.posts import (PostResponse, PostRequest, DeletePostResponse,
-                           CommentRequest, ReactionRequest)
+from schemas.posts import (PostResponse, PostRequest, DeletePostResponse)
 from routers.auth import get_current_user_id
 from supabase import create_client
-
 router = APIRouter(prefix="/posts", tags=["posts"])
 bearer_scheme = HTTPBearer()
 
@@ -30,7 +28,11 @@ async def create_post(post: PostRequest, auth_id: str = Depends(get_current_user
 @router.get("/list", response_model=list[PostResponse])
 async def list_posts():
     # Fetch all posts from the database
-    response = supabase.table("posts").select("*").execute()
+    response = (supabase
+                .table("posts")
+                .select("*, reactions(*)")
+                .execute())
+    posts = response.data
     return response.data
 
 
@@ -71,5 +73,4 @@ async def delete_post(
         raise HTTPException(status_code=403, detail="Not authorized to delete this post")
 
     db.table("posts").delete().eq("post_id", post_id).execute()
-
     return {"message": "Post Deleted", "post_id": post_id}

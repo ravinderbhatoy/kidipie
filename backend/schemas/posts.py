@@ -4,12 +4,20 @@ from uuid import UUID
 from pydantic import BaseModel
 
 
+class ReactionResponse(BaseModel):
+    reaction_id: int
+    post_id: int
+    reaction_type: str
+    user_id: UUID
+
+
 class PostResponse (BaseModel):
     post_id: int
     user_id: UUID
     content: str | None = None
     image_url: str | None = None
     created_at: datetime
+    reactions: list[ReactionResponse] = []
 
 
 class PostRequest (BaseModel):

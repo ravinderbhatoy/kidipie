@@ -138,5 +138,14 @@ async def logout():
 
 
 @router.post("/refresh")
-async def refresh_token():
-    return {"access_token": "fake-refreshed-token-456", "token_type": "bearer"}
+async def refresh_token(refresh_token: str):
+    try:
+        response = supabase.auth.refresh_session(refresh_token)
+        new_session = response.session
+        return {
+            "access_token": new_session.access_token,
+            "refresh_token": new_session.refresh_token,
+            "expires_in": new_session.expires_in,
+        }
+    except Exception as e:
+        raise HTTPException(status_code=401, detail="Could not refresh session")
