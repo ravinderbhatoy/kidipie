@@ -31,9 +31,20 @@ async def list_posts():
     response = (supabase
                 .table("posts")
                 .select("*, reactions(*)")
+                .order("created_at", desc=True)
                 .execute())
     posts = response.data
-    return response.data
+    for post in posts:
+        reactions = {}
+
+        for reaction in post["reactions"]:
+            reaction_type = reaction["reaction_type"]
+            reactions[reaction_type] = reactions.get(reaction_type, 0) + 1
+
+        del post["reactions"]
+        post["reactions"] = reactions
+
+    return posts
 
 
 @router.get("/{post_id}", response_model=PostResponse)
@@ -42,6 +53,7 @@ async def get_post(post_id: Annotated[int, Path(ge=1)]):
     response = (
         supabase
         .table("posts")
+        .select("*, reactions(*)")
         .select("*")
         .eq("post_id", post_id)
         .execute()
@@ -54,7 +66,15 @@ async def get_post(post_id: Annotated[int, Path(ge=1)]):
             detail="Post not found"
         )
 
-    return response.data[0]
+    post = response.data[0]
+    reactions = {}
+    for reaction in post["reactions"]:
+        reaction_type = reaction["reaction_type"]
+        reactions[reaction_type] = reactions.get(reaction_type, 0) + 1
+
+    del post["reactions"]
+    post["reactions"] = reactions
+    return post
 
 
 @router.delete("/{post_id}", response_model=DeletePostResponse)
