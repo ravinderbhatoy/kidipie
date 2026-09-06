@@ -7,8 +7,48 @@ interface PostCardProps {
   post: PostItem;
 }
 
+const formatRelativeTime = (dateString?: string): string => {
+  if (!dateString) return "just now";
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return dateString;
+
+  const now = new Date();
+  const diffInSeconds = Math.max(0, Math.floor((now.getTime() - date.getTime()) / 1000));
+
+  if (diffInSeconds < 60) {
+    return "just now";
+  }
+
+  const diffInMinutes = Math.floor(diffInSeconds / 60);
+  if (diffInMinutes < 60) {
+    return diffInMinutes === 1 ? "1 min ago" : `${diffInMinutes} mins ago`;
+  }
+
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  if (diffInHours < 24) {
+    return diffInHours === 1 ? "1 hour ago" : `${diffInHours} hours ago`;
+  }
+
+  const diffInDays = Math.floor(diffInHours / 24);
+  if (diffInDays < 7) {
+    return diffInDays === 1 ? "1 day ago" : `${diffInDays} days ago`;
+  }
+
+  const diffInWeeks = Math.floor(diffInDays / 7);
+  if (diffInWeeks < 4) {
+    return diffInWeeks === 1 ? "1 week ago" : `${diffInWeeks} weeks ago`;
+  }
+
+  const diffInMonths = Math.floor(diffInDays / 30);
+  if (diffInMonths < 12) {
+    return diffInMonths === 1 ? "1 month ago" : `${diffInMonths} months ago`;
+  }
+
+  const diffInYears = Math.floor(diffInDays / 365);
+  return diffInYears === 1 ? "1 year ago" : `${diffInYears} years ago`;
+};
+
 export const PostCard: React.FC<PostCardProps> = ({ post }) => {
-  console.log(post)
   const { toggleLikePost, addReaction, addComment } = usePosts();
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState("");
@@ -26,8 +66,8 @@ export const PostCard: React.FC<PostCardProps> = ({ post }) => {
       {/* Header Info */}
       <div className="flex items-center gap-3">
         <img
-          src={post.author?.avatar}
-          alt={post.author?.name}
+          src={post.users?.image_url ?? "https://api.dicebear.com/9.x/initials/svg?seed=" + post.users?.username}
+          alt={post.users?.username}
           className="w-10 h-10 rounded-full border-2 border-[var(--primary)] object-cover shrink-0"
           onError={(e) => {
             (e.currentTarget as HTMLImageElement).src =
@@ -36,10 +76,10 @@ export const PostCard: React.FC<PostCardProps> = ({ post }) => {
         />
         <div>
           <h3 className="font-bold text-[var(--text-main)] text-sm">
-            {post.author?.name}
+            {post.users?.username}
           </h3>
           <span className="text-xs text-[var(--text-muted)] font-medium">
-            {post.created_at}
+            {formatRelativeTime(post.created_at)}
           </span>
         </div>
         {post.tag && (

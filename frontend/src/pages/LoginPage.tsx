@@ -10,12 +10,6 @@ export type Tokens = {
   user_id: string;
 }
 
-export interface LoginPageProps {
-  onForgotPassword?: () => void;
-  onSubmit?: (data: { identifier: string; password: string }) => void;
-  onGoogleSignIn?: () => void;
-}
-
 export function LoginPage() {
   const navigate = useNavigate();
   const [identifier, setIdentifier] = useState("");

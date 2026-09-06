@@ -2,7 +2,7 @@ import axios from "axios";
 import type { AxiosInstance } from "axios";
 import type { SignUpFormData } from "../pages/SignUpPage";
 
-const api: AxiosInstance = axios.create({
+export const api: AxiosInstance = axios.create({
   baseURL: "http://localhost:8000/api/v1/",
   withCredentials: true,
   headers: {

@@ -12,7 +12,6 @@ export const HomePage: React.FC = () => {
     const getPosts = async () => {
       try {
         const response = await fetchPosts();
-        console.log(response)
         setPosts(response)
       } catch (error) {
         console.error("Failed to fetch posts", error);
