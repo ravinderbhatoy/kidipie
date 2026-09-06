@@ -28,11 +28,13 @@ async def create_post(post: PostRequest, auth_id: str = Depends(get_current_user
 @router.get("/list", response_model=list[PostResponse])
 async def list_posts():
     # Fetch all posts from the database
-    response = (supabase
-                .table("posts")
-                .select("*, reactions(*)")
-                .order("created_at", desc=True)
-                .execute())
+    response = (
+        supabase
+        .table("posts")
+        .select("*, users(user_id, username, image_url), reactions(*)")
+        .order("created_at", desc=True)
+        .execute()
+    )
     posts = response.data
     for post in posts:
         reactions = {}
@@ -53,8 +55,7 @@ async def get_post(post_id: Annotated[int, Path(ge=1)]):
     response = (
         supabase
         .table("posts")
-        .select("*, reactions(*)")
-        .select("*")
+        .select("*, users(user_id, username, image_url), reactions(*)")
         .eq("post_id", post_id)
         .execute()
     )

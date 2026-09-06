@@ -1,6 +1,6 @@
 from datetime import datetime
 from uuid import UUID
-
+from typing import Any
 from pydantic import BaseModel
 
 
@@ -17,6 +17,7 @@ class PostResponse (BaseModel):
     content: str | None = None
     image_url: str | None = None
     created_at: datetime
+    users: dict[str, Any]
     reactions: dict[str, int]
 
 
