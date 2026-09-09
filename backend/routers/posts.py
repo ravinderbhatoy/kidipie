@@ -1,23 +1,28 @@
-from typing import Annotated
-from fastapi import APIRouter, Path, Depends, HTTPException
-from database import supabase, SUPABASE_URL, SUPABASE_KEY
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from schemas.posts import (PostResponse, PostRequest, DeletePostResponse)
-from routers.auth import get_current_user_id
 from supabase import create_client
+from routers.auth import get_current_user_id
+from schemas.posts import (PostResponse, PostRequest, DeletePostResponse)
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from database import supabase, SUPABASE_URL, SUPABASE_KEY
+from typing import Annotated
+from fastapi import (APIRouter, Path, Depends, HTTPException, UploadFile, File,
+                     Form)
 router = APIRouter(prefix="/posts", tags=["posts"])
 bearer_scheme = HTTPBearer()
 
+BUCKET_NAME = 'user_posts'
+
 
 @router.post("/create", response_model=PostResponse)
-async def create_post(post: PostRequest, auth_id: str = Depends(get_current_user_id),
+async def create_post(content: str = Form(),
+                      image: UploadFile | None = File(None),
+                      auth_id: str = Depends(get_current_user_id),
                       credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
     db = create_client(SUPABASE_URL, SUPABASE_KEY)
     db.postgrest.auth(credentials.credentials)
     try:
         response = db.table('posts').insert({
             "user_id": auth_id,
-            "content": post.content,
+            "content": content,
             "image_url": post.image_url,
         }).execute()
     except Exception:

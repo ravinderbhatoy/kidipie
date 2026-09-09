@@ -18,7 +18,7 @@ class PostResponse (BaseModel):
     image_url: str | None = None
     created_at: datetime
     users: dict[str, Any]
-    reactions: dict[str, int]
+    reactions: dict[str, int] | None
 
 
 class PostRequest (BaseModel):
