@@ -1,5 +1,6 @@
-import { createContext, useState, useEffect, useContext, type ReactNode } from 'react';
+import { useState, useContext, type ReactNode } from 'react';
 import { api } from '../api/axios';
+import { AuthContext } from './AuthContext';
 
 // --- Types ---
 export type User = {
@@ -28,26 +29,28 @@ type Tokens = {
   user_id: string;
 };
 
-export const AuthContext = createContext<AuthContextType | null>(null);
-
 // --- Provider ---
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>();
-  const [token, setToken] = useState<string | null>(() => {
-    const storedTokens = localStorage.getItem("tokens");
-    return storedTokens ? JSON.parse(storedTokens).access_token : null;
-  }
-  );
-  const [loading, setLoading] = useState(true);
+
+  const [token, setToken] = useState(() => {
+    const stored = localStorage.getItem('tokens');
+    if (stored) {
+      try {
+        return JSON.parse(stored)?.access_token || null;
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  });
+
+  const [loading, setLoading] = useState(!token);
 
   // this is not safe but for now storing credentials in local storage
   const login = async (credentials: UserCredentials) => {
-    try {
-      const response = await api.post("auth/login", credentials);
-      localStorage.setItem("tokens", JSON.stringify(response.data));
-    } catch (error) {
-      throw error;
-    }
+    const response = await api.post<Tokens>("auth/login", credentials);
+    localStorage.setItem("tokens", JSON.stringify(response.data));
   };
 
   // Logout
@@ -58,24 +61,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // On mount: restore token and fetch user if token exists
-  useEffect(() => {
-    const storedToken = (() => {
-      const stored = localStorage.getItem('tokens');
-      if (stored) {
-        try {
-          return JSON.parse(stored)?.access_token;
-        } catch {
-          return null;
-        }
-      }
-      return null;
-    })();
-    if (storedToken) {
-      setToken(storedToken);
-    } else {
-      setLoading(false);
-    }
-  }, []);
+
+
 
   const value: AuthContextType = {
     isAuthenticated: !!token && !!user,
@@ -93,13 +80,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-// --- Custom hook for easy consumption ---
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error('useAuth must be used within AuthProvider');
   }
   return context;
-};
-
-export default AuthProvider;
+}
