@@ -43,7 +43,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // this is not safe but for now storing credentials in local storage
   const login = async (credentials: UserCredentials) => {
     try {
-      const response = await api.post<Tokens>("auth/login", credentials);
+      const response = await api.post("auth/login", credentials);
       localStorage.setItem("tokens", JSON.stringify(response.data));
     } catch (error) {
       throw error;
