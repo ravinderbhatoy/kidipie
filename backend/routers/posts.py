@@ -4,7 +4,7 @@ from supabase.client import ClientOptions
 from routers.auth import get_current_user_id
 from schemas.posts import (PostResponse, DeletePostResponse)
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from database import supabase, SUPABASE_URL, SUPABASE_KEY, supabase_admin
+from database import supabase, SUPABASE_URL, SUPABASE_KEY
 from typing import Annotated
 from fastapi import (APIRouter, Path, Depends, HTTPException, UploadFile, File, Form)
 import uuid
@@ -22,8 +22,10 @@ async def create_post(
     auth_id: str = Depends(get_current_user_id),
     credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme)
 ):
+
+    # Authenticate requests as the current Supabase user
     db = create_client(
-        SUPABASE_URL, 
+        SUPABASE_URL,
         SUPABASE_KEY,
         options=ClientOptions(
             headers={
@@ -31,8 +33,6 @@ async def create_post(
             }
         )
     )
-    # db.postgrest.auth(credentials.credentials)
-
     image_url = None
 
     try:
@@ -56,7 +56,6 @@ async def create_post(
                 {
                     "content-type": content_type,
                     "upsert": "false",
-                    # "authorization": f"Bearer {credentials.credentials}"
                 }
             )
 
@@ -76,7 +75,7 @@ async def create_post(
 
         # Fetch the complete post with user + reactions
         post = (
-            supabase
+            db
             .table("posts")
             .select("*, users(user_id, username, image_url), reactions(*)")
             .eq("post_id", post_id)
@@ -84,20 +83,8 @@ async def create_post(
             .execute()
         )
 
-        post_data = post.data    
+        post_data = post.data
         print("POST DATA:", post_data)
-
-        # Testing
-        if post_data["users"] is None:
-            user_check = (
-                supabase
-                .table("users")
-                .select("*")
-                .eq("user_id", post_data["user_id"])
-                .single()
-                .execute()
-            )
-            print("DIRECT USER CHECK:", user_check.data)
 
         # Convert reactions into counts
         reactions = {}
@@ -105,7 +92,7 @@ async def create_post(
         for reaction in post_data["reactions"]:
             reaction_type = reaction["reaction_type"]
             reactions[reaction_type] = reactions.get(reaction_type, 0) + 1
-        
+
         del post_data["reactions"]
         post_data["reactions"] = reactions
 

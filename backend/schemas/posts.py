@@ -14,10 +14,10 @@ class ReactionResponse(BaseModel):
 class PostResponse (BaseModel):
     post_id: int
     user_id: UUID
-    content: str | None = None
+    content: str
     image_url: str | None = None
     created_at: datetime
-    users: dict[str, Any]
+    users: dict[str, Any] | None
     reactions: dict[str, int] | None
 
 
