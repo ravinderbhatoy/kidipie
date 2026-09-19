@@ -1,6 +1,6 @@
 from supabase import create_client
 from routers.auth import get_current_user_id
-from schemas.posts import (PostResponse, PostRequest, DeletePostResponse)
+from schemas.posts import (PostResponse, DeletePostResponse)
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from database import supabase, SUPABASE_URL, SUPABASE_KEY
 from typing import Annotated
