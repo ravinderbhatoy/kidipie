@@ -1,6 +1,6 @@
 import axios from "axios";
 import type { AxiosInstance } from "axios";
-import type { SignUpFormData } from "../pages/SignUpPage";
+import { type SignUpFormData } from "../Auth/SignUpPage";
 
 export const api: AxiosInstance = axios.create({
   baseURL: "http://localhost:8000/api/v1/",
@@ -35,6 +35,15 @@ export interface UserCredentials {
 export interface PostData {
   content: string;
   image_url?: string;
+}
+
+const getUser = async () => {
+  try {
+    const response = await api.get('auth/user')
+    setUser(response.data)
+  } catch (error) {
+    console.log(error)
+  }
 }
 
 // this is not safe but for now storing credentials in local storage
@@ -81,10 +90,3 @@ export const logoutUser = () => {
 //   content: "Post of frontend",
 //   image_url: "https://example.com/image.jpg"
 // })
-
-// const tokens: Tokens = await loginUser({
-//     email: "bindubhatoy@gmail.com",
-//     password: "bhatoy"
-// })
-
-// console.log(tokens)

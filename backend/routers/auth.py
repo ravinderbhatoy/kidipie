@@ -4,6 +4,7 @@ from database import supabase, supabase_admin, SUPABASE_URL
 import jwt
 from jwt import PyJWKClient
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from schemas.auth import getUserResponse
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 JWKS_URL = f"{SUPABASE_URL}/auth/v1/.well-known/jwks.json"
@@ -106,10 +107,7 @@ def google_callback(code: str):
     }
 
 
-@router.get("/me")
-async def get_current_user_id(credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
-    # Extract the JWT from the Authorization header
-    token = credentials.credentials
+def extract_id(token):
     try:
         # Get the signing key used by Supabase to sign the JWT
         signing_key = jwk_client.get_signing_key_from_jwt(token)
@@ -130,6 +128,39 @@ async def get_current_user_id(credentials: HTTPAuthorizationCredentials = Depend
 
     # Return the authenticated user's UUID from the JWT
     return payload["sub"]
+
+
+@router.get("/me")
+async def get_current_user_id(credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
+    # Extract the JWT from the Authorization header
+    token = credentials.credentials
+    return extract_id(token)
+
+
+@router.get("/user")
+async def get_user(credentials: HTTPAuthorizationCredentials =
+                   Depends(bearer_scheme),
+                   response_model=getUserResponse):
+    user_id = extract_id(credentials.credentials)
+    try:
+        response = (
+            supabase_admin.table('users')
+            .select('user_id, username, email')
+            .eq("user_id", user_id)
+            .execute()
+        )
+        if not response.data:
+            raise HTTPException(
+                status_code=401,
+                detail="User not found"
+            )
+
+        return response.data[0]
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=401,
+                            detail=f"Unable to fetch the user{e}")
 
 
 @router.post("/logout")

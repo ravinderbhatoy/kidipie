@@ -35,7 +35,10 @@ export interface CommentItem {
 export interface PostItem {
   id: string;
   author: UserProfile;
-  users: {},
+  users: {
+    username: string;
+    image_url: string;
+  },
   content: string;
   title?: string;
   image_url?: string;

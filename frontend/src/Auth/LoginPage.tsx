@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { User, Lock, Eye, EyeOff } from "lucide-react";
 import GoogleIcon from "../components/GoogleIcon";
 import { loginUser } from "../api/axios";
+import { useAuth } from "../context/AuthContext";
 
 export type Tokens = {
   access_token: string;
@@ -11,19 +12,22 @@ export type Tokens = {
 }
 
 export function LoginPage() {
-  const navigate = useNavigate();
+  const { token, setToken } = useAuth()
+  const navigate = useNavigate()
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e: React.SubmitEvent) => {
     e.preventDefault();
-    console.log(identifier, password)
-    await loginUser({
+    const res = await loginUser({
       email: identifier.trim(),
       password: password.trim()
     })
-    navigate("/");
+
+    console.log(res)
+    setToken(res)
+    navigate('/')
   };
 
   return (
