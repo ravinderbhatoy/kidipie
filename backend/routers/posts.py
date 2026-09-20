@@ -4,7 +4,7 @@ from supabase.client import ClientOptions
 from routers.auth import get_current_user_id
 from schemas.posts import (PostResponse, DeletePostResponse)
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from database import supabase, SUPABASE_URL, SUPABASE_KEY
+from database import supabase, supabase_admin, SUPABASE_URL, SUPABASE_KEY
 from typing import Annotated
 from fastapi import (APIRouter, Path, Depends, HTTPException, UploadFile, File, Form)
 import uuid
@@ -110,7 +110,9 @@ async def create_post(
 async def list_posts():
     # Fetch all posts from the database
     response = (
-        supabase
+        # this has to be changed without admin but it will not allowed to
+        # fetch users
+        supabase_admin
         .table("posts")
         .select("*, users(user_id, username, image_url), reactions(*)")
         .order("created_at", desc=True)

@@ -66,7 +66,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // this is not safe but for now storing credentials in local storage
 
   const value: AuthContextType = {
-    user,
+    user: user || null,
     token,
     loading,
     setToken,

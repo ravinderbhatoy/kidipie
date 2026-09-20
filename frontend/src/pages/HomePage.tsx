@@ -3,41 +3,73 @@ import PostBox from "../components/PostBox";
 import PostCard from "../components/PostCard";
 import usePosts from "../hooks/usePosts";
 import { fetchPosts } from "../api/axios";
+import type { CreatedPost, PostItem } from "../types";
+
+const toFeedPost = (post: CreatedPost): PostItem => ({
+  id: String(post.post_id),
+  author: {
+    name: post.users?.username || "User",
+    title: "",
+    bio: "",
+    avatar: post.users?.image_url || "",
+    streakDays: 0,
+    level: 0,
+    xp: 0,
+    xpNextLevel: 0,
+    streakCalendar: [],
+    gallery: [],
+  },
+  users: {
+    username: post.users?.username || "User",
+    image_url: post.users?.image_url || "",
+  },
+  content: post.content,
+  image_url: post.image_url ?? undefined,
+  created_at: post.created_at,
+  likesCount: 0,
+  reactions: {
+    heart: post.reactions?.heart ?? 0,
+    surprised: post.reactions?.surprised ?? 0,
+    sparkles: post.reactions?.sparkles ?? 0,
+  },
+  comments: [],
+});
 
 export const HomePage: React.FC = () => {
-  const [posts, setPosts] = useState([]);
+  const { userProfile } = usePosts();
+  const [posts, setPosts] = useState<PostItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const getPosts = async () => {
       try {
         const response = await fetchPosts();
-        setPosts(response)
+        setPosts((response as CreatedPost[]).map(toFeedPost));
       } catch (error) {
         console.error("Failed to fetch posts", error);
-        throw error
       } finally {
         setLoading(false);
       }
-    }
+    };
     getPosts();
-  }, [])
+  }, []);
+
+  const handleCreatedPost = (created: CreatedPost) => {
+    setPosts((prev) => [toFeedPost(created), ...prev]);
+  };
 
   if (loading) {
     return <p>Loading...</p>;
   }
 
-  const { userProfile, addPost } = usePosts();
   return (
     <div className="space-y-6">
-      {/* Create Post Box */}
       <PostBox
         currentUser={userProfile}
-        onPost={addPost}
+        onPost={handleCreatedPost}
         placeholder="Share your latest project or idea..."
       />
 
-      {/* Feed List */}
       {posts?.length > 0 ? (
         <div className="space-y-4">
           {posts.map((post) => (

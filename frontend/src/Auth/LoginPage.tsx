@@ -24,7 +24,6 @@ export function LoginPage() {
       email: identifier.trim(),
       password: password.trim()
     })
-
     console.log(res)
     setToken(res)
     navigate('/')

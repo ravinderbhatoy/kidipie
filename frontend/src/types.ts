@@ -55,12 +55,23 @@ export interface PostItem {
   userLiked?: boolean;
 }
 
+export interface CreatedPost {
+  post_id: number;
+  user_id: string;
+  content: string;
+  image_url: string | null;
+  created_at: string;
+  users: {
+    user_id?: string;
+    username: string;
+    image_url: string;
+  } | null;
+  reactions: Record<string, number> | null;
+}
+
 export interface PostBoxProps {
   currentUser?: UserProfile;
-  onPost?: (postData: {
-    content: string;
-    image_url?: string;
-  }) => void | Promise<void>;
+  onPost?: (post: CreatedPost) => void | Promise<void>;
   placeholder?: string;
   className?: string;
 }

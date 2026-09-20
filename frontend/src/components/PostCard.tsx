@@ -67,7 +67,7 @@ export const PostCard: React.FC<PostCardProps> = ({ post }) => {
       <div className="flex items-center gap-3">
         <img
           src={post.users?.image_url ?? "https://api.dicebear.com/9.x/initials/svg?seed=" + post.users?.username}
-          alt={post.users?.username}
+          alt={post.users?.username ?? "User avatar"}
           className="w-10 h-10 rounded-full border-2 border-[var(--primary)] object-cover shrink-0"
           onError={(e) => {
             (e.currentTarget as HTMLImageElement).src =
@@ -99,11 +99,13 @@ export const PostCard: React.FC<PostCardProps> = ({ post }) => {
       {/* Post Attachment Image */}
       {post.image_url && (
         <div className="rounded-xl overflow-hidden border border-[var(--border-subtle)] bg-[var(--bg-input)]">
+          {post.image_url && 
           <img
             src={post.image_url}
-            alt="Post attachment"
+            alt={post.imageAlt ?? "Post attachment"}
             className="w-full max-h-96 object-cover hover:scale-[1.01] transition-transform duration-200"
           />
+          }
         </div>
       )}
 
