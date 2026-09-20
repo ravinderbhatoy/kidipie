@@ -1,31 +1,47 @@
-import React, { useState, useRef, type ChangeEvent } from 'react';
-import { Image as ImageIcon, X, Loader2, Send } from 'lucide-react';
-import type { PostBoxProps } from '../types';
+import React, { useEffect, useState, useRef, type ChangeEvent } from "react";
+import { Image as ImageIcon, X, Loader2, Send } from "lucide-react";
+import type { PostBoxProps } from "../types";
+import { createPost } from "../api/axios";
 
-const TAG_OPTIONS = ['Project', 'Drawing', 'Craft', 'Science'];
+const TAG_OPTIONS = ["Project", "Drawing", "Craft", "Science"];
+const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 
 export const PostBox: React.FC<PostBoxProps> = ({
   currentUser,
   onPost,
-  placeholder = 'Share what you made today...',
-  className = '',
+  placeholder = "Share what you made today...",
+  className = "",
 }) => {
-  const [content, setContent] = useState('');
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [selectedTag, setSelectedTag] = useState<string>('Project');
+  const [content, setContent] = useState("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [selectedTag, setSelectedTag] = useState<string>("Project");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  useEffect(() => {
+    if (!selectedFile) {
+      setPreviewUrl(null);
+      return;
+    }
+    const objectUrl = URL.createObjectURL(selectedFile);
+    setPreviewUrl(objectUrl);
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [selectedFile]);
+
   const handleImageFile = (file: File) => {
-    if (!file.type.startsWith('image/')) return;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      if (e.target?.result) {
-        setSelectedImage(e.target.result as string);
-      }
-    };
-    reader.readAsDataURL(file);
+    if (!file.type.startsWith("image/")) {
+      setError("Please choose an image file.");
+      return;
+    }
+    if (file.size > MAX_IMAGE_BYTES) {
+      setError("Please choose an image smaller than 10MB.");
+      return;
+    }
+    setError(null);
+    setSelectedFile(file);
   };
 
   const onFileInputChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -35,40 +51,50 @@ export const PostBox: React.FC<PostBoxProps> = ({
   };
 
   const removeImage = () => {
-    setSelectedImage(null);
+    setSelectedFile(null);
     if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      fileInputRef.current.value = "";
     }
   };
 
-  const handleSubmit = async (e?: React.FormEvent) => {
+  const resetForm = () => {
+    setContent("");
+    setSelectedFile(null);
+    setError(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const handleSubmit = async (e?: React.SubmitEvent) => {
     if (e) e.preventDefault();
     const trimmedContent = content.trim();
-    if (!trimmedContent && !selectedImage) return;
+    if (!trimmedContent && !selectedFile) return;
 
     setIsSubmitting(true);
+    setError(null);
     try {
-      if (onPost) {
-        await onPost({
-          content: trimmedContent,
-          imageUrl: selectedImage || undefined,
-          tag: selectedTag,
-        });
-      }
-      setContent('');
-      setSelectedImage(null);
+      const created = await createPost({
+        content: trimmedContent,
+        image: selectedFile || undefined,
+      });
+      await onPost?.(created);
+      resetForm();
     } catch (err) {
-      console.error('Failed to publish post:', err);
+      console.error("Failed to publish post:", err);
+      setError("Could not publish your post. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const isFormValid = content.trim().length > 0 || !!selectedImage;
+  const isFormValid = content.trim().length > 0 || !!selectedFile;
   const avatarUrl = currentUser?.avatar;
 
   return (
-    <div className={`bg-[var(--bg-card)] rounded-2xl p-4 sm:p-5 border-2 border-[var(--border-subtle)] shadow-sm ${className}`}>
+    <div
+      className={`bg-[var(--bg-card)] rounded-2xl p-4 sm:p-5 border-2 border-[var(--border-subtle)] shadow-sm ${className}`}
+    >
       <input
         type="file"
         ref={fileInputRef}
@@ -77,13 +103,12 @@ export const PostBox: React.FC<PostBoxProps> = ({
         className="hidden"
       />
 
-      {/* Input Row */}
       <div className="flex gap-3 sm:gap-4 items-start">
         {avatarUrl && (
           <div className="w-10 h-10 rounded-full border-2 border-[var(--primary)] overflow-hidden bg-[var(--bg-input)] shrink-0">
             <img
               src={avatarUrl}
-              alt={currentUser?.name || 'User'}
+              alt={currentUser?.name || "User"}
               className="w-full h-full object-cover"
             />
           </div>
@@ -98,11 +123,10 @@ export const PostBox: React.FC<PostBoxProps> = ({
             className="w-full bg-[var(--bg-input)] border border-[var(--border-medium)] focus:border-[var(--primary)] focus:bg-[var(--bg-card)] rounded-xl p-3 text-sm sm:text-base font-medium text-[var(--text-main)] placeholder-[var(--text-muted)] outline-none resize-none transition-colors"
           />
 
-          {/* Image Preview */}
-          {selectedImage && (
+          {previewUrl && (
             <div className="mt-3 relative inline-block">
               <img
-                src={selectedImage}
+                src={previewUrl}
                 alt="Attachment preview"
                 className="w-32 h-32 object-cover rounded-xl border border-[var(--border-subtle)]"
               />
@@ -117,7 +141,10 @@ export const PostBox: React.FC<PostBoxProps> = ({
             </div>
           )}
 
-          {/* Action Bar */}
+          {error && (
+            <p className="mt-2 text-xs font-medium text-[var(--danger)]">{error}</p>
+          )}
+
           <div className="flex items-center justify-between mt-3 pt-3 border-t border-[var(--border-subtle)] gap-2 flex-wrap">
             <div className="flex items-center gap-2 flex-wrap">
               <button
@@ -129,18 +156,16 @@ export const PostBox: React.FC<PostBoxProps> = ({
                 <span>Photo</span>
               </button>
 
-              {/* Category Tags */}
               <div className="flex items-center gap-1">
                 {TAG_OPTIONS.map((tag) => (
                   <button
                     key={tag}
                     type="button"
                     onClick={() => setSelectedTag(tag)}
-                    className={`text-xs px-2.5 py-1 rounded-full font-bold transition-colors cursor-pointer ${
-                      selectedTag === tag
-                        ? 'bg-[var(--primary)] text-white'
-                        : 'bg-[var(--bg-input)] text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)]'
-                    }`}
+                    className={`text-xs px-2.5 py-1 rounded-full font-bold transition-colors cursor-pointer ${selectedTag === tag
+                      ? "bg-[var(--primary)] text-white"
+                      : "bg-[var(--bg-input)] text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)]"
+                      }`}
                   >
                     {tag}
                   </button>
@@ -152,11 +177,10 @@ export const PostBox: React.FC<PostBoxProps> = ({
               type="button"
               onClick={() => handleSubmit()}
               disabled={!isFormValid || isSubmitting}
-              className={`bg-[var(--primary)] text-white font-bold text-sm px-5 py-2 rounded-xl flex items-center gap-2 transition-all ${
-                isFormValid && !isSubmitting
-                  ? 'hover:bg-[var(--primary-hover)] cursor-pointer shadow-sm'
-                  : 'opacity-50 cursor-not-allowed'
-              }`}
+              className={`bg-[var(--primary)] text-white font-bold text-sm px-5 py-2 rounded-xl flex items-center gap-2 transition-all ${isFormValid && !isSubmitting
+                ? "hover:bg-[var(--primary-hover)] cursor-pointer shadow-sm"
+                : "opacity-50 cursor-not-allowed"
+                }`}
             >
               {isSubmitting ? (
                 <Loader2 className="w-4 h-4 animate-spin" />

@@ -9,10 +9,9 @@ import { usePosts } from '../hooks/usePosts';
 
 export const Layout: React.FC = () => {
   const [isNewPostModalOpen, setIsNewPostModalOpen] = useState(false);
-  const { userProfile, addPost } = usePosts();
+  const { userProfile } = usePosts();
 
-  const handlePostSubmit = (postData: { content: string; imageUrl?: string; tag?: string }) => {
-    addPost(postData);
+  const handlePostSubmit = () => {
     setIsNewPostModalOpen(false);
   };
 
