@@ -37,8 +37,6 @@ class PostStatusResponse (BaseModel):
 
 
 class CommentRequest(BaseModel):
-    post_id: int
-    user_id: UUID
     content: str
 
 
