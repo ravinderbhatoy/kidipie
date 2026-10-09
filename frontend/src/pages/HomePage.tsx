@@ -28,6 +28,7 @@ export const toFeedPost = (post: CreatedPost): PostItem => ({
     sparkles: post.reactions?.sparkles ?? 0,
   },
   comments: [],
+  comment_count: post.comment_count ?? 0,
 });
 
 export const HomePage: React.FC = () => {

@@ -40,8 +40,8 @@ export interface CommentItem {
   user_id: string;
   users: {
     username: string;
-    image_url: string;
-  } | null,
+    image_url: string | null;
+  };
 }
 
 export interface PostItem {
@@ -57,6 +57,7 @@ export interface PostItem {
   imageAlt?: string;
   tag?: string;
   created_at: string;
+  comment_count: number;
   likesCount: number;
   reactions: {
     heart: number;
@@ -77,9 +78,10 @@ export interface CreatedPost {
     email: string;
     user_id?: string;
     username: string;
-    image_url: string;
+    image_url: string | null;
   } | null;
   reactions: Record<string, number> | null;
+  comment_count: number;
 }
 
 export interface PostBoxProps {

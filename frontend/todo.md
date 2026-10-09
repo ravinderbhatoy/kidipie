@@ -1,1 +1,1 @@
-- [] Design Comment layout
+- [x] Design Comment layout

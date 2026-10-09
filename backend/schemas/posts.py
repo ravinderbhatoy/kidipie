@@ -19,6 +19,7 @@ class PostResponse (BaseModel):
     created_at: datetime
     users: dict[str, Any] | None
     reactions: dict[str, int] | None
+    comment_count: int = 0
 
 
 class PostRequest (BaseModel):

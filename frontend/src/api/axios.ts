@@ -1,7 +1,7 @@
 import axios from "axios";
 import type { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from "axios";
 import { type SignUpFormData } from "../Auth/SignUpPage";
-import type { CreatedPost } from "../types";
+import type { CreatedPost, CommentItem } from "../types";
 
 const BASE_URL = "http://localhost:8000/api/v1/";
 
@@ -170,7 +170,7 @@ export interface PostData {
 }
 
 export interface CommentData {
-  post_id: string;
+  post_id: string | number;
   content: string;
 }
 
@@ -204,8 +204,15 @@ export const createPost = async ({ content, image }: PostData): Promise<CreatedP
   return response.data;
 };
 
-export const createComment = async (_commentData: CommentData) => {
-  return;
+export const createComment = async (commentData: CommentData): Promise<CommentItem> => {
+  try {
+    const response = await api.post<CommentItem>(`comments/${commentData.post_id}`, {
+      content: commentData.content,
+    });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
 };
 
 export const fetchPosts = async () => {

@@ -2,57 +2,18 @@ import React, { useState, useEffect } from "react";
 import { Heart, MessageCircle, Sparkles, Smile, Send } from "lucide-react";
 import type { PostItem, CommentItem } from "../types";
 import { usePosts } from "../hooks/usePosts";
-import { api } from "../api/axios";
+import { api, createComment } from "../api/axios";
+import { formatRelativeTime } from "../api/utils";
+import { useAuth } from "../context/AuthContext";
 
 interface PostCardProps {
   post: PostItem;
 }
 
-
 type CommentsByPost = Record<string | number, CommentItem[]>;
 
-const formatRelativeTime = (dateString?: string): string => {
-  if (!dateString) return "just now";
-  const date = new Date(dateString);
-  if (isNaN(date.getTime())) return dateString;
-
-  const now = new Date();
-  const diffInSeconds = Math.max(0, Math.floor((now.getTime() - date.getTime()) / 1000));
-
-  if (diffInSeconds < 60) {
-    return "just now";
-  }
-
-  const diffInMinutes = Math.floor(diffInSeconds / 60);
-  if (diffInMinutes < 60) {
-    return `${diffInMinutes}m ago`;
-  }
-
-  const diffInHours = Math.floor(diffInMinutes / 60);
-  if (diffInHours < 24) {
-    return `${diffInHours}h ago`;
-  }
-
-  const diffInDays = Math.floor(diffInHours / 24);
-  if (diffInDays < 7) {
-    return `${diffInDays}d ago`;
-  }
-
-  const diffInWeeks = Math.floor(diffInDays / 7);
-  if (diffInWeeks < 4) {
-    return `${diffInWeeks}w ago`;
-  }
-
-  const diffInMonths = Math.floor(diffInDays / 30);
-  if (diffInMonths < 12) {
-    return `${diffInMonths}mo ago`;
-  }
-
-  const diffInYears = Math.floor(diffInDays / 365);
-  return `${diffInYears}y ago`;
-};
-
 export const PostCard: React.FC<PostCardProps> = ({ post }) => {
+  const { user } = useAuth()
   const { toggleLikePost, addReaction, addComment } = usePosts();
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState("");
@@ -87,11 +48,30 @@ export const PostCard: React.FC<PostCardProps> = ({ post }) => {
   }, [showComments, post.id, commentByPost]);
 
 
-  const handleCommentSubmit = (e: React.SubmitEvent) => {
+  const handleCommentSubmit = async (e: React.SubmitEvent) => {
     e.preventDefault();
-    if (commentText.trim()) {
+    if (!commentText.trim()) return;
+
+    try {
+      const result = await createComment({ post_id: post.id, content: commentText.trim() });
+      if (result) {
+        const newComment: CommentItem = {
+          ...result,
+          users: {
+            username: user?.username ?? "You",
+            image_url: user?.image_url ?? null,
+          },
+        };
+
+        setCommentByPost((prev) => ({
+          ...prev,
+          [post.id]: [...(prev[post.id] || []), newComment],
+        }));
+      }
       addComment(post.id, commentText);
       setCommentText("");
+    } catch (err) {
+      console.error("Failed to create comment:", err);
     }
   };
   const fetchUserAvatar = (item: PostItem | CommentItem): string => {
@@ -99,7 +79,6 @@ export const PostCard: React.FC<PostCardProps> = ({ post }) => {
     if (user?.image_url) return user.image_url;
     return `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(user?.username ?? "anon")}`;
   };
-
   return (
     <article className="bg-[var(--bg-card)] rounded-2xl p-5 border-2 border-[var(--border-subtle)] shadow-sm space-y-4 hover:border-[var(--border-medium)] transition-colors">
       {/* Header Info */}
@@ -192,7 +171,7 @@ export const PostCard: React.FC<PostCardProps> = ({ post }) => {
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[var(--bg-input)] hover:bg-[var(--bg-subtle)] text-[var(--text-secondary)] font-bold text-xs transition-all cursor-pointer"
         >
           <MessageCircle className="w-4 h-4 text-[var(--primary)]" />
-          <span>View {post.comments?.length || 0} Comments</span>
+          <span>View {post.comment_count} Comments</span>
         </button>
       </div>
 

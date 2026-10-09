@@ -64,12 +64,14 @@ async def create_post(
             )
 
         # Create the post in the database
-        response = db.table('posts').insert({
-            "user_id": auth_id,
-            "content": content,
-            "image_url": image_url,
-        }).execute()
-
+        response = (
+            db.table('posts').insert({
+                "user_id": auth_id,
+                "content": content,
+                "image_url": image_url,
+            })
+            .execute()
+        )
         # Get the newly created post ID
         post_id = response.data[0]["post_id"]
 
@@ -116,21 +118,25 @@ async def list_posts():
         # fetch users
         supabase_admin
         .table("posts")
-        .select("*, users(user_id, username, image_url), reactions(*)")
+        .select("""
+            *, users(user_id, username, image_url),
+            reactions(*),
+            comments(count)
+         """)
         .order("created_at", desc=True)
         .execute()
     )
+
     posts = response.data
     for post in posts:
-        reactions = {}
-
+        reactions: dict[str, int] = {}
         for reaction in post["reactions"]:
             reaction_type = reaction["reaction_type"]
             reactions[reaction_type] = reactions.get(reaction_type, 0) + 1
-
         del post["reactions"]
+        comment_count = post["comments"][0]["count"]
         post["reactions"] = reactions
-
+        post["comment_count"] = comment_count
     return posts
 
 
