@@ -33,7 +33,7 @@ export interface User {
 // }
 
 export interface CommentItem {
-  comment_id: string;
+  comment_id: number;
   post_id: number;
   content: string;
   created_at: string;
@@ -41,7 +41,7 @@ export interface CommentItem {
   users: {
     username: string;
     image_url: string;
-  },
+  } | null,
 }
 
 export interface PostItem {

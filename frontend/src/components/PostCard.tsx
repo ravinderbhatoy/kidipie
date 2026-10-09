@@ -1,11 +1,15 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Heart, MessageCircle, Sparkles, Smile, Send } from "lucide-react";
 import type { PostItem, CommentItem } from "../types";
 import { usePosts } from "../hooks/usePosts";
+import { api } from "../api/axios";
 
 interface PostCardProps {
   post: PostItem;
 }
+
+
+type CommentsByPost = Record<string | number, CommentItem[]>;
 
 const formatRelativeTime = (dateString?: string): string => {
   if (!dateString) return "just now";
@@ -21,37 +25,67 @@ const formatRelativeTime = (dateString?: string): string => {
 
   const diffInMinutes = Math.floor(diffInSeconds / 60);
   if (diffInMinutes < 60) {
-    return diffInMinutes === 1 ? "1 min ago" : `${diffInMinutes} mins ago`;
+    return `${diffInMinutes}m ago`;
   }
 
   const diffInHours = Math.floor(diffInMinutes / 60);
   if (diffInHours < 24) {
-    return diffInHours === 1 ? "1 hour ago" : `${diffInHours} hours ago`;
+    return `${diffInHours}h ago`;
   }
 
   const diffInDays = Math.floor(diffInHours / 24);
   if (diffInDays < 7) {
-    return diffInDays === 1 ? "1 day ago" : `${diffInDays} days ago`;
+    return `${diffInDays}d ago`;
   }
 
   const diffInWeeks = Math.floor(diffInDays / 7);
   if (diffInWeeks < 4) {
-    return diffInWeeks === 1 ? "1 week ago" : `${diffInWeeks} weeks ago`;
+    return `${diffInWeeks}w ago`;
   }
 
   const diffInMonths = Math.floor(diffInDays / 30);
   if (diffInMonths < 12) {
-    return diffInMonths === 1 ? "1 month ago" : `${diffInMonths} months ago`;
+    return `${diffInMonths}mo ago`;
   }
 
   const diffInYears = Math.floor(diffInDays / 365);
-  return diffInYears === 1 ? "1 year ago" : `${diffInYears} years ago`;
+  return `${diffInYears}y ago`;
 };
 
 export const PostCard: React.FC<PostCardProps> = ({ post }) => {
   const { toggleLikePost, addReaction, addComment } = usePosts();
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState("");
+  const [commentByPost, setCommentByPost] = useState<CommentsByPost>({});
+  const [loadingComments, setLoadingComments] = useState(false);
+
+  useEffect(() => {
+    // Don't fetch if hidden OR already fetched
+    if (!showComments || commentByPost[post.id]) return;
+
+    let isMounted = true;
+    const loadComments = async () => {
+      setLoadingComments(true);
+      try {
+        const response = await api.get<CommentItem[]>(`comments/${post.id}`);
+        if (isMounted) {
+          setCommentByPost((prev) => ({ ...prev, [post.id]: response.data }));
+        }
+      } catch (err) {
+        console.error("Failed to fetch comments", err);
+      } finally {
+        if (isMounted) {
+          setLoadingComments(false);
+        }
+      }
+    };
+
+    loadComments();
+    return () => {
+      isMounted = false;
+    };
+  }, [showComments, post.id, commentByPost]);
+
 
   const handleCommentSubmit = (e: React.SubmitEvent) => {
     e.preventDefault();
@@ -158,7 +192,7 @@ export const PostCard: React.FC<PostCardProps> = ({ post }) => {
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[var(--bg-input)] hover:bg-[var(--bg-subtle)] text-[var(--text-secondary)] font-bold text-xs transition-all cursor-pointer"
         >
           <MessageCircle className="w-4 h-4 text-[var(--primary)]" />
-          <span>{post.comments?.length} Comments</span>
+          <span>View {post.comments?.length || 0} Comments</span>
         </button>
       </div>
 
@@ -166,31 +200,35 @@ export const PostCard: React.FC<PostCardProps> = ({ post }) => {
       {showComments && (
         <div className="pt-3 border-t border-[var(--border-subtle)] space-y-3">
           <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-            {post.comments?.length > 0 ? (
-              post.comments.map((c) => (
+            {loadingComments ? (
+              <p className="text-xs text-[var(--text-muted)] text-center py-2">
+                Loading comments...
+              </p>
+            ) : commentByPost[post.id]?.length > 0 ? (
+              commentByPost[post.id].map((c) => (
                 <div
                   key={c.comment_id}
-                  className="flex items-start gap-2.5 bg-[var(--bg-input)] p-2.5 rounded-xl"
+                  className="flex items-start gap-3 bg-[var(--bg-input)] px-4 py-3 rounded-3xl"
                 >
                   <img
                     src={fetchUserAvatar(c)}
-                    alt={c.users?.username}
-                    className="w-7 h-7 rounded-full object-cover border border-[var(--primary)] shrink-0"
+                    alt={c.users?.username ?? "User avatar"}
+                    className="w-8 h-8 sm:w-9 sm:h-9 rounded-full border-2 border-[var(--primary-light)] object-cover shrink-0 mt-0.5"
                     onError={(e) => {
                       (e.currentTarget as HTMLImageElement).src =
                         "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80";
                     }}
                   />
-                  <div className="flex-1 text-xs">
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-[var(--text-main)]">
-                        {c.users?.username}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-[var(--text-main)] leading-relaxed break-words">
+                      <span className="font-bold text-[var(--primary-light)] mr-1.5">
+                        {c.users?.username ?? "Anonymous"}
                       </span>
-                      <span className="text-[10px] text-[var(--text-muted)]">
-                        {c.created_at}
-                      </span>
-                    </div>
-                    <p className="text-[var(--text-main)] mt-0.5">{c.content}</p>
+                      {c.content}
+                    </p>
+                    <span className="block text-[11px] text-[var(--text-muted)] font-medium mt-0.5">
+                      {formatRelativeTime(c.created_at)}
+                    </span>
                   </div>
                 </div>
               ))
@@ -200,6 +238,7 @@ export const PostCard: React.FC<PostCardProps> = ({ post }) => {
               </p>
             )}
           </div>
+
 
           {/* Comment Form */}
           <form onSubmit={handleCommentSubmit} className="flex gap-2">
